@@ -19,9 +19,6 @@ namespace DataLayer.Entity
         public string LastName { get; set; }
 
         public DateTime BirthDate { get; set; }
-
-        
-        public ICollection<FilmGenre> FilmGenres { get; set; }
         
         public ICollection<FilmDirector> FilmDirectors { get; set; }
         

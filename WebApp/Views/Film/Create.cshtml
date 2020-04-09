@@ -1,0 +1,42 @@
+@model WebApp.ViewModels.FilmViewModel
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Film</h4>
+<hr/>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Film.Title" class="control-label"></label>
+                <input asp-for="Film.Title" class="form-control"/>
+                <span asp-validation-for="Film.Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="GenreSelections" class="control-label"></label>
+                <br/>
+                @{
+                    for (var i = 0; i < Model.GenreSelections.Count(); i++)
+                    {
+                        <input asp-for="GenreSelections[i].Checked" type="checkbox" />
+                        <label asp-for="GenreSelections[i].Genre.Id">@Model.GenreSelections[i].Genre.Name</label>
+                        <input asp-for="GenreSelections[i].Genre.Id" type="hidden"/>                                                                                                              
+                        <input asp-for="GenreSelections[i].Genre.Name" type="hidden"/>                                                                                                              
+                        <br/>
+                    }
+                }
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary"/>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

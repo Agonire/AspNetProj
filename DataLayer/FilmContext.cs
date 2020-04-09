@@ -2,7 +2,7 @@
 using DataLayer.Entity;
 using Microsoft.EntityFrameworkCore;
 
-namespace WebApp
+namespace DataLayer
 {
     public class FilmContext : DbContext
     {
@@ -13,7 +13,6 @@ namespace WebApp
         public DbSet<Film> Films { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Participant> Participants { get; set; }
-        
         public DbSet<FilmActor> FilmActors { get; set; }
         public DbSet<FilmGenre> FilmGenres { get; set; }
         public DbSet<FilmDirector> FilmDirectors { get; set; }
@@ -25,10 +24,7 @@ namespace WebApp
         {
             modelBuilder.Entity<FilmActor>()
                 .HasKey(e => new {e.FilmId, e.ParticipantId});
-            
-            modelBuilder.Entity<FilmGenre>()
-                .HasKey(e => new {e.FilmId, e.GenreId});
-            
+
             modelBuilder.Entity<FilmDirector>()
                 .HasKey(e => new {e.FilmId, e.ParticipantId});
             
@@ -40,6 +36,9 @@ namespace WebApp
             
             modelBuilder.Entity<FilmIdeaAuthor>()
                 .HasKey(e => new {e.FilmId, e.ParticipantId});
+            
+            modelBuilder.Entity<FilmGenre>()
+                .HasKey(e => new {e.FilmId, e.GenreId});
         }
     }
 }

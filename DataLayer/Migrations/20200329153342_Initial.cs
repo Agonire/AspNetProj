@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace WebApp.Migrations
+namespace DataLayer.Migrations
 {
     public partial class Initial : Migration
     {
@@ -51,6 +51,30 @@ namespace WebApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FilmGenres",
+                columns: table => new
+                {
+                    FilmId = table.Column<int>(nullable: false),
+                    GenreId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FilmGenres", x => new { x.FilmId, x.GenreId });
+                    table.ForeignKey(
+                        name: "FK_FilmGenres_Films_FilmId",
+                        column: x => x.FilmId,
+                        principalTable: "Films",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FilmGenres_Genres_GenreId",
+                        column: x => x.GenreId,
+                        principalTable: "Genres",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FilmActors",
                 columns: table => new
                 {
@@ -96,37 +120,6 @@ namespace WebApp.Migrations
                         principalTable: "Participants",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "FilmGenres",
-                columns: table => new
-                {
-                    FilmId = table.Column<int>(nullable: false),
-                    GenreId = table.Column<int>(nullable: false),
-                    ParticipantId = table.Column<int>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FilmGenres", x => new { x.FilmId, x.GenreId });
-                    table.ForeignKey(
-                        name: "FK_FilmGenres_Films_FilmId",
-                        column: x => x.FilmId,
-                        principalTable: "Films",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_FilmGenres_Genres_GenreId",
-                        column: x => x.GenreId,
-                        principalTable: "Genres",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_FilmGenres_Participants_ParticipantId",
-                        column: x => x.ParticipantId,
-                        principalTable: "Participants",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -215,11 +208,6 @@ namespace WebApp.Migrations
                 name: "IX_FilmGenres_GenreId",
                 table: "FilmGenres",
                 column: "GenreId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_FilmGenres_ParticipantId",
-                table: "FilmGenres",
-                column: "ParticipantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FilmIdeaAuthors_ParticipantId",

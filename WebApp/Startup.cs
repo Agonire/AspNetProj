@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DataLayer;
+using DataLayer.Contract;
+using DataLayer.Entity;
+using DataLayer.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -24,11 +28,16 @@ namespace WebApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRazorPages();
+            services.AddControllersWithViews();
 
             services.AddDbContext<FilmContext>(options => 
-                options.UseMySql(
-                    Configuration.GetConnectionString("FilmContext")));
+                options.UseMySql(Configuration.GetConnectionString("FilmContext"),
+                    b => b.MigrationsAssembly("DataLayer")));
+
+            services.AddScoped<IFilmRepo, FilmRepo>();
+            services.AddScoped<IGenreRepo, GenreRepo>();
+            services.AddScoped<IParticipantRepo, ParticipantRepo>();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,7 +63,9 @@ namespace WebApp
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages();
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

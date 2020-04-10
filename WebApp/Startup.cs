@@ -29,6 +29,8 @@ namespace WebApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            services.AddControllers().AddNewtonsoftJson(options =>
+                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
             services.AddDbContext<FilmContext>(options => 
                 options.UseMySql(Configuration.GetConnectionString("FilmContext"),

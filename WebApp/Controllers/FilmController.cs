@@ -12,6 +12,7 @@ using DataLayer.Contract;
 using DataLayer.Entity;
 using DataLayer.Repository;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Internal;
 using WebApp.ViewModels;
 
 namespace WebApp.Controllers
@@ -76,22 +77,9 @@ namespace WebApp.Controllers
             
             var film = _mapper.Map<Film>(filmViewModel);
 
-            film.FilmGenres = new List<FilmGenre>();
-            
-            
-            var checkedGenres = filmViewModel.GenreSelections.Where(gs => gs.Checked).ToList();
-         
+            filmViewModel.GenreSelections.RemoveAll(gs => !gs.Checked);            
 
-            // Add genre to film
-            foreach (var genreSelection in filmViewModel.GenreSelections.Where(genreSelection =>
-                genreSelection.Checked))
-            {
-                film.FilmGenres.Add(new FilmGenre()
-                {
-                    FilmId = filmViewModel.Id,
-                    GenreId = genreSelection.Id
-                });
-            }
+            film.FilmGenres = _mapper.Map<FilmViewModel, List<FilmGenre>>(filmViewModel);            
 
             _filmRepo.Create(film);
             _filmRepo.Save();
@@ -119,12 +107,8 @@ namespace WebApp.Controllers
 
             var filmGenres = film.FilmGenres.Select(filmGenre => filmGenre.Genre).ToList();
 
-            // GenreSelection.check = true, if genre exists inside filmGenres
-            foreach (var genreSelection in filmViewModel.GenreSelections
-                .Where(genreSelection => filmGenres.Any(g => g.Id == genreSelection.Id)))
-            {
-                genreSelection.Checked = true;
-            }
+            filmViewModel.GenreSelections.Where(gs => filmGenres.Any(g => g.Id == gs.Id)).ToList()
+                .ForEach(gs=> gs.Checked = true);
 
             return View(filmViewModel);
         }

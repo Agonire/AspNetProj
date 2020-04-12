@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using DataLayer;
 using DataLayer.Contract;
 using DataLayer.Entity;
@@ -28,14 +29,20 @@ namespace WebApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAutoMapper(typeof(Startup));
+            
             services.AddControllersWithViews();
+            
             services.AddControllers().AddNewtonsoftJson(options =>
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
+            
             services.AddDbContext<FilmContext>(options => 
                 options.UseMySql(Configuration.GetConnectionString("FilmContext"),
                     b => b.MigrationsAssembly("DataLayer")));
 
+           
+            // Change repos With service
             services.AddScoped<IFilmRepo, FilmRepo>();
             services.AddScoped<IGenreRepo, GenreRepo>();
             services.AddScoped<IParticipantRepo, ParticipantRepo>();

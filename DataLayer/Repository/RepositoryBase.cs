@@ -30,9 +30,9 @@ namespace DataLayer.Repository
             Context.Set<T>().Add(entity);
         }
 
-        public void Update(T entity)
+        public void Update(T newFilmData)
         {
-            Context.Set<T>().Update(entity);
+            Context.Set<T>().Update(newFilmData);
         }
 
         public void Delete(T entity)

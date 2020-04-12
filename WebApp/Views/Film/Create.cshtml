@@ -12,9 +12,9 @@
         <form asp-action="Create" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="Film.Title" class="control-label"></label>
-                <input asp-for="Film.Title" class="form-control"/>
-                <span asp-validation-for="Film.Title" class="text-danger"></span>
+                <label asp-for="Title" class="control-label"></label>
+                <input asp-for="Title" class="form-control"/>
+                <span asp-validation-for="Title" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="GenreSelections" class="control-label"></label>
@@ -23,9 +23,9 @@
                     for (var i = 0; i < Model.GenreSelections.Count(); i++)
                     {
                         <input asp-for="GenreSelections[i].Checked" type="checkbox" />
-                        <label asp-for="GenreSelections[i].Genre.Id">@Model.GenreSelections[i].Genre.Name</label>
-                        <input asp-for="GenreSelections[i].Genre.Id" type="hidden"/>                                                                                                              
-                        <input asp-for="GenreSelections[i].Genre.Name" type="hidden"/>                                                                                                              
+                        <label asp-for="GenreSelections[i].Id">@Model.GenreSelections[i].Name</label>
+                        <input asp-for="GenreSelections[i].Id" type="hidden"/>                                                                                                              
+                        <input asp-for="GenreSelections[i].Name" type="hidden"/>                                                                                                              
                         <br/>
                     }
                 }

@@ -14,17 +14,19 @@ namespace DataLayer.Repository
         {
         }
 
-        public void CascadeUpdate(Film oldFilm, Film newFilm)
+        public new void Update(Film newFilmData)
         {
-            oldFilm.Title = newFilm.Title;
+            var oldFilm = Find(f => f.Id == newFilmData.Id).First();
+            oldFilm.Title = newFilmData.Title;
 
-            var genresToAdd = newFilm.FilmGenres.Except(oldFilm.FilmGenres).ToList();
-            var genresToRemove = oldFilm.FilmGenres.Except(newFilm.FilmGenres).ToList();
 
-            genresToRemove.ForEach(filmGenre => Context.Set<FilmGenre>().Remove(filmGenre));
-            genresToAdd.ForEach(filmGenre => Context.Set<FilmGenre>().Add(filmGenre));
-            
-            Update(oldFilm);
+            var genresToAdd = newFilmData.FilmGenres.Except(oldFilm.FilmGenres).ToList();
+            var genresToRemove = oldFilm.FilmGenres.Except(newFilmData.FilmGenres).ToList();
+
+            genresToRemove.ForEach(filmGenre => { Context.Set<FilmGenre>().Remove(filmGenre); });
+            genresToAdd.ForEach(filmGenre => { Context.Set<FilmGenre>().Add(filmGenre); });
+
+            Context.Update(oldFilm);
         }
 
         public new IQueryable<Film> Find(Expression<Func<Film, bool>> expression)

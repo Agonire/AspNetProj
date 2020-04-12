@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -19,11 +20,13 @@ namespace WebApp.Controllers
     {
         private readonly IFilmRepo _filmRepo;
         private readonly IGenreRepo _genreRepo;
+        private readonly IMapper _mapper;
 
-        public FilmController(IFilmRepo filmRepo, IGenreRepo genreRepo)
+        public FilmController(IFilmRepo filmRepo, IGenreRepo genreRepo, IMapper mapper)
         {
             _filmRepo = filmRepo;
             _genreRepo = genreRepo;
+            _mapper = mapper;
         }
 
         // GET: Film
@@ -54,21 +57,14 @@ namespace WebApp.Controllers
         {
             var filmViewModel = new FilmViewModel
             {
-                Film = new Film(),
-                GenreSelections = new List<FilmViewModel.GenreSelection>()
+                GenreSelections =
+                    _mapper.Map<List<Genre>, List<FilmViewModel.GenreSelection>>(_genreRepo.GetAll().ToList())
             };
-
-            foreach (var genre in _genreRepo.GetAll())
-            {
-                filmViewModel.GenreSelections.Add(new FilmViewModel.GenreSelection()
-                {
-                    Genre = genre
-                });
-            }
 
             return View(filmViewModel);
         }
 
+        // NEEDSWORK
         // POST: Film/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -76,28 +72,31 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(FilmViewModel filmViewModel)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(filmViewModel);
+            
+            var film = _mapper.Map<Film>(filmViewModel);
+
+            film.FilmGenres = new List<FilmGenre>();
+            
+            
+            var checkedGenres = filmViewModel.GenreSelections.Where(gs => gs.Checked).ToList();
+         
+
+            // Add genre to film
+            foreach (var genreSelection in filmViewModel.GenreSelections.Where(genreSelection =>
+                genreSelection.Checked))
             {
-                var film = filmViewModel.Film;
-                film.FilmGenres = new List<FilmGenre>();
-                _filmRepo.Create(film);
-
-                // Add genre to film
-                foreach (var genreSelection in filmViewModel.GenreSelections.Where(genreSelection => genreSelection.Checked))
+                film.FilmGenres.Add(new FilmGenre()
                 {
-                    film.FilmGenres.Add(new FilmGenre()
-                    {
-                        Film = film,
-                        GenreId = genreSelection.Genre.Id
-                    });
-                }
-
-                _filmRepo.Save();
-
-                return RedirectToAction(nameof(Index));
+                    FilmId = filmViewModel.Id,
+                    GenreId = genreSelection.Id
+                });
             }
 
-            return View(filmViewModel);
+            _filmRepo.Create(film);
+            _filmRepo.Save();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Film/Edit/5
@@ -115,26 +114,18 @@ namespace WebApp.Controllers
                 return NotFound();
             }
 
-            var filmViewModel = new FilmViewModel
+            var filmViewModel = _mapper.Map<FilmViewModel>(film);
+            filmViewModel.GenreSelections = _mapper.Map<List<Genre>, List<FilmViewModel.GenreSelection>>(_genreRepo.GetAll().ToList());
+
+            var filmGenres = film.FilmGenres.Select(filmGenre => filmGenre.Genre).ToList();
+
+            // GenreSelection.check = true, if genre exists inside filmGenres
+            foreach (var genreSelection in filmViewModel.GenreSelections
+                .Where(genreSelection => filmGenres.Any(g => g.Id == genreSelection.Id)))
             {
-                Film = film,
-                GenreSelections = new List<FilmViewModel.GenreSelection>()
-            };
-
-            var genres = film.FilmGenres.Select(filmGenre => filmGenre.Genre).ToList();
-
-            foreach (var genre in _genreRepo.GetAll())
-            {
-                var genreSelector = new FilmViewModel.GenreSelection()
-                {
-                    Genre = genre
-                };
-                
-                if (genres.Any(g=>g.Id == genre.Id))
-                    genreSelector.Checked = true;
-
-                filmViewModel.GenreSelections.Add(genreSelector);
+                genreSelection.Checked = true;
             }
+
             return View(filmViewModel);
         }
 
@@ -145,37 +136,27 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, FilmViewModel filmViewModel)
         {
-            if (id != filmViewModel.Film.Id)
+            if (id != filmViewModel.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                var filmToUpdate = _filmRepo.Find(f => f.Id == id).FirstOrDefault();
-                if (filmToUpdate == null) return RedirectToAction(nameof(Index));
+                var newFilmData = _mapper.Map<Film>(filmViewModel);
 
-                var newFilmData = new Film {Title = filmViewModel.Film.Title, FilmGenres = new List<FilmGenre>()};
-                
-                
-                foreach (var genreSelection in filmViewModel.GenreSelections
-                    .Where(s => s.Checked))
-                {
-                    newFilmData.FilmGenres.Add(new FilmGenre()
-                    {
-                        FilmId = filmToUpdate.Id,
-                        GenreId = genreSelection.Genre.Id
-                    });
-                }
+                filmViewModel.GenreSelections.RemoveAll(gs => !gs.Checked);
 
+                newFilmData.FilmGenres = _mapper.Map<FilmViewModel, List<FilmGenre>>(filmViewModel);
+                
                 try
                 {
-                    _filmRepo.CascadeUpdate(filmToUpdate, newFilmData);
+                    _filmRepo.Update(newFilmData);
                     _filmRepo.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!FilmExists(filmViewModel.Film.Id))
+                    if (!FilmExists(newFilmData.Id))
                     {
                         return NotFound();
                     }

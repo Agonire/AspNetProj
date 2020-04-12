@@ -10,7 +10,7 @@ namespace DataLayer.Contract
         IQueryable<T> GetAll();
         IQueryable<T> Find(Expression<Func<T, bool>> expression);
         void Create(T entity);
-        void Update(T entity);
+        void Update(T newFilmData);
         void Delete(T entity);
         void Save();
     }

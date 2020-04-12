@@ -16,12 +16,10 @@ namespace WebApp.Api
     [ApiController]
     public class FilmController : ControllerBase
     {
-        private readonly FilmContext _context;
         private readonly IFilmRepo _filmRepo;
 
-        public FilmController(FilmContext context, IFilmRepo filmRepo)
+        public FilmController(IFilmRepo filmRepo)
         {
-            _context = context;
             _filmRepo = filmRepo;
         }
 
@@ -36,7 +34,7 @@ namespace WebApp.Api
         [HttpGet("{id}")]
         public ActionResult<Film> GetFilm(int id)
         {
-            var film = _filmRepo.Find(f=>f.Id == id).FirstOrDefault();
+            var film = _filmRepo.Find(f => f.Id == id).FirstOrDefault();
 
             if (film == null)
             {
@@ -59,13 +57,7 @@ namespace WebApp.Api
 
             try
             {
-                var oldFilm = _filmRepo.Find(f => f.Id == id).FirstOrDefault();
-                if (oldFilm != null)
-                {
-                    if(film.FilmGenres == null)
-                        film.FilmGenres = new List<FilmGenre>();
-                    _filmRepo.CascadeUpdate(oldFilm, film);
-                }
+                _filmRepo.Update(film);
 
                 _filmRepo.Save();
             }
@@ -88,33 +80,33 @@ namespace WebApp.Api
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
-        public async Task<ActionResult<Film>> PostFilm(Film film)
+        public ActionResult<Film> PostFilm(Film film)
         {
-            _context.Films.Add(film);
-            await _context.SaveChangesAsync();
+            _filmRepo.Create(film);
+            _filmRepo.Save();
 
-            return CreatedAtAction("GetFilm", new { id = film.Id }, film);
+            return CreatedAtAction("GetFilm", new {id = film.Id}, film);
         }
 
         // DELETE: api/FilmApi/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Film>> DeleteFilm(int id)
+        public ActionResult<Film> DeleteFilm(int id)
         {
-            var film = await _context.Films.FindAsync(id);
+            var film = _filmRepo.Find(f=>f.Id == id).FirstOrDefault();
             if (film == null)
             {
                 return NotFound();
             }
 
-            _context.Films.Remove(film);
-            await _context.SaveChangesAsync();
-
+            _filmRepo.Delete(film);
+            _filmRepo.Save();
+            
             return film;
         }
 
         private bool FilmExists(int id)
         {
-            return _context.Films.Any(e => e.Id == id);
+            return _filmRepo.Find(f => f.Id == id).Any();
         }
     }
 }

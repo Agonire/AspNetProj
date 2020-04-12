@@ -6,39 +6,34 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DataLayer;
+using DataLayer.Contract;
 using DataLayer.Entity;
+using DataLayer.Repository;
 
 namespace WebApp.Controllers
 {
-    public class GenreController : Microsoft.AspNetCore.Mvc.Controller
+    public class GenreController : Controller
     {
-        private readonly FilmContext _context;
+        private readonly IGenreRepo _genreRepo;
 
-        public GenreController(FilmContext context)
+        public GenreController(IGenreRepo genreRepo)
         {
-            _context = context;
+            _genreRepo = genreRepo;
         }
 
         // GET: Genre
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.Genres.ToListAsync());
+            return View(_genreRepo.GetAll().ToList());
         }
 
         // GET: Genre/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var genre = await _context.Genres
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (genre == null)
-            {
-                return NotFound();
-            }
+            var genre = _genreRepo.Find(g => g.Id == id).FirstOrDefault();
+            if (genre == null) return NotFound();
 
             return View(genre);
         }
@@ -54,30 +49,24 @@ namespace WebApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Genre genre)
+        public IActionResult Create(Genre genre)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(genre);
-                await _context.SaveChangesAsync();
+                _genreRepo.Create(genre);
+                _genreRepo.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(genre);
         }
 
         // GET: Genre/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var genre = await _context.Genres.FindAsync(id);
-            if (genre == null)
-            {
-                return NotFound();
-            }
+            var genre = _genreRepo.Find(g=>g.Id == id).FirstOrDefault();
+            if (genre == null) return NotFound();
             return View(genre);
         }
 
@@ -86,68 +75,53 @@ namespace WebApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Genre genre)
+        public IActionResult Edit(int id, Genre genre)
         {
-            if (id != genre.Id)
-            {
-                return NotFound();
-            }
+            if (id != genre.Id) return NotFound();
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(genre);
+            
+            try
             {
-                try
-                {
-                    _context.Update(genre);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!GenreExists(genre.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                _genreRepo.Update(genre);
+                _genreRepo.Save();
             }
-            return View(genre);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!GenreExists(genre.Id))
+                    return NotFound();
+                else
+                    throw;
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Genre/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var genre = await _context.Genres
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (genre == null)
-            {
-                return NotFound();
-            }
+            var genre = _genreRepo.Find(g => g.Id == id).FirstOrDefault();
+            if (genre == null) return NotFound();
 
             return View(genre);
         }
 
         // POST: Genre/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost][ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var genre = await _context.Genres.FindAsync(id);
-            _context.Genres.Remove(genre);
-            await _context.SaveChangesAsync();
+            var genre = _genreRepo.Find(g => g.Id == id).FirstOrDefault();
+            // Null check ???
+            _genreRepo.Delete(genre);
+            _genreRepo.Save();
             return RedirectToAction(nameof(Index));
         }
 
         private bool GenreExists(int id)
         {
-            return _context.Genres.Any(e => e.Id == id);
+            return _genreRepo.GetAll().Any(e => e.Id == id);
         }
     }
 }

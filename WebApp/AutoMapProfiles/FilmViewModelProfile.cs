@@ -4,6 +4,7 @@ using System.Linq;
 using AutoMapper;
 using DataLayer.Entity;
 using WebApp.ViewModels;
+using WebApp.ViewModels.Film;
 
 namespace WebApp.AutoMapProfiles
 {
@@ -11,27 +12,36 @@ namespace WebApp.AutoMapProfiles
     {
         public FilmViewModelProfile()
         {
-            CreateMap<FilmViewModel, Film>()
+            CreateMap<FilmIndexViewModel, Film>()
                 .ReverseMap();
             
-            CreateMap<FilmViewModel, List<FilmGenre>>()
-                .ConvertUsing<CustomMapping>();
+            CreateMap<FilmDetailsViewModel, Film>()
+                .ReverseMap();
             
-            CreateMap<FilmViewModel.GenreSelection, FilmGenre>()
+            CreateMap<FilmEditViewModel, Film>()
+                .ReverseMap();
+            
+            CreateMap<FilmEditViewModel, List<FilmGenre>>()
+                .ConvertUsing<CustomMapping>();
+
+            CreateMap<FilmEditViewModel.Genre, Genre>()
+                .ReverseMap();
+            
+            CreateMap<FilmEditViewModel.Genre, FilmGenre>()
                 .ForMember(dest => dest.GenreId, opt => opt
                     .MapFrom(src => src.Id))
                 .ReverseMap();
         }
     }
 
-    public class CustomMapping : ITypeConverter<FilmViewModel, List<FilmGenre>>
+    public class CustomMapping : ITypeConverter<FilmEditViewModel, List<FilmGenre>>
     {
-        public List<FilmGenre> Convert(FilmViewModel source, List<FilmGenre> destination, ResolutionContext context)
+        public List<FilmGenre> Convert(FilmEditViewModel source, List<FilmGenre> destination, ResolutionContext context)
         {
-            var res = context.Mapper.Map<List<FilmViewModel.GenreSelection>, List<FilmGenre>>(source.GenreSelections);
-            res.ForEach(fg=> fg.FilmId = source.Id);
+            var result = context.Mapper.Map<List<FilmEditViewModel.Genre>, List<FilmGenre>>(source.GenreViewModels);
+            result.ForEach(fg=> fg.FilmId = source.Id);
 
-            return res;
+            return result;
         }
     }
 }
